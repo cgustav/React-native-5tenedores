@@ -2,6 +2,11 @@
 # Created by https://www.toptal.com/developers/gitignore/api/reactnative,dotenv,macos,android,xcode,visualstudio
 # Edit at https://www.toptal.com/developers/gitignore?templates=reactnative,dotenv,macos,android,xcode,visualstudio
 
+### Custom ###
+# Inner (env)
+app/utils/firebase.js
+
+
 ### Android ###
 # Built application files
 *.apk
