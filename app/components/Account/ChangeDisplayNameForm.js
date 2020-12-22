@@ -13,8 +13,6 @@ export default function ChangeDisplayNameForm(props) {
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = () => {
-    console.log("NEW DISPLAY NAME: ", newDisplayName);
-
     setError(null);
     if (!newDisplayName) {
       setError("El nombre no puede estar vacío");
