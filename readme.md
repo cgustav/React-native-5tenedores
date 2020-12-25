@@ -18,3 +18,6 @@ Dentro de las dependencias críticas del proyecto se encuentran:
 
 - [React Native Elements](https://reactnativeelements.com/)
 - [React Navigation](https://reactnavigation.org/)
+- [Expo Camera](https://docs.expo.io/versions/latest/sdk/camera/)
+- [Expo Image Picker](https://docs.expo.io/versions/latest/sdk/imagepicker/)
+- [Firebase](https://www.npmjs.com/package/firebase)
