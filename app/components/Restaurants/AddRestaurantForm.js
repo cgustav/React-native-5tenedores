@@ -56,7 +56,7 @@ export default function AddRestaurantForm(props) {
           setIsLoading(false);
           db.collection("restaurants")
             .add({
-              name: restaurantAddress,
+              name: restaurantName,
               address: restaurantAddress,
               description: restaurantDescription,
               location: locationRestaurant,
