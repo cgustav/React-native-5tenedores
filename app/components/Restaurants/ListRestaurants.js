@@ -9,10 +9,12 @@ import {
 } from "react-native";
 import { Image } from "react-native-elements";
 import { size } from "lodash";
+import { useNavigation } from "@react-navigation/native";
 
 export default function ListRestaurants(props) {
-  const { restaurants } = props;
-  //   let restaurants = ["sss", "s2"];
+  const { restaurants, handleLoadMore, isLoading } = props;
+
+  const navigation = useNavigation();
 
   return (
     <View>
@@ -20,8 +22,18 @@ export default function ListRestaurants(props) {
         // <Text>Listado</Text>
         <FlatList
           data={restaurants}
-          renderItem={(restaurant) => <Restaurant restaurant={restaurant} />}
+          renderItem={(restaurant) => (
+            <Restaurant restaurant={restaurant} navigation={navigation} />
+          )}
           keyExtractor={(item, index) => index.toString()}
+          onEndReachedThreshold={0.5}
+          onEndReached={handleLoadMore}
+          ListFooterComponent={
+            <FooterList
+              isLoading={isLoading}
+              navigation={navigation}
+            ></FooterList>
+          }
         />
       ) : (
         <View style={styles.loaderRestaurants}>
@@ -34,19 +46,13 @@ export default function ListRestaurants(props) {
 }
 
 function Restaurant(props) {
-  const { restaurant } = props;
+  const { restaurant, navigation } = props;
   const { images, name, address, description } = restaurant.item;
   const imageRestaurant = images[0];
 
   const goRestaurant = () => {
-    console.log("Ok");
+    navigation.navigate("restaurant");
   };
-
-  //   return (
-  //     <View>
-  //       <Text>Restaurante</Text>
-  //     </View>
-  //   );
 
   return (
     <TouchableOpacity onPress={goRestaurant}>
@@ -73,6 +79,24 @@ function Restaurant(props) {
       </View>
     </TouchableOpacity>
   );
+}
+
+function FooterList(props) {
+  const { isLoading } = props;
+
+  if (isLoading) {
+    return (
+      <View style={styles.loaderRestaurants}>
+        <ActivityIndicator size="large"></ActivityIndicator>
+      </View>
+    );
+  } else {
+    return (
+      <View style={styles.notFoundRestaurants}>
+        <Text>No quedan restaurantes por cargar</Text>
+      </View>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
@@ -103,5 +127,10 @@ const styles = StyleSheet.create({
     paddingTop: 2,
     color: "grey",
     width: 300,
+  },
+  notFoundRestaurants: {
+    marginTop: 10,
+    marginBottom: 20,
+    alignItems: "center",
   },
 });
