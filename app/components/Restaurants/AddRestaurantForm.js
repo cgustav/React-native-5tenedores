@@ -13,8 +13,14 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import Modal from "../Modal";
 import MapView from "react-native-maps";
-
+import uuid from "random-uuid-v4";
 import { map, size, filter } from "lodash";
+
+import { firebaseApp } from "../../utils/firebase";
+import firebase from "firebase/app";
+import "firebase/storage";
+import "firebase/firestore";
+const db = firebase.firestore(firebaseApp);
 
 const widthScreen = Dimensions.get("window").width;
 
@@ -34,6 +40,76 @@ export default function AddRestaurantForm(props) {
     // console.log(restaurantAddress);
     // console.log(restaurantDescription);
     console.log("Location Restaurant: ", locationRestaurant);
+    if (!restaurantName || !restaurantAddress || !restaurantDescription) {
+      toastRef.current.show("Todos los campos del formulario son obligatorios");
+    } else if (size(imagesSelected) === 0)
+      toastRef.current.show(
+        "El restaurante tiene que tener al menos una foto."
+      );
+    else if (!locationRestaurant)
+      toastRef.current.show("Tienes que localizar el restaurante en el mapa.");
+    else {
+      setIsLoading(true);
+
+      uploadImageToStorage()
+        .then((response) => {
+          setIsLoading(false);
+          db.collection("restaurants")
+            .add({
+              name: restaurantAddress,
+              address: restaurantAddress,
+              description: restaurantDescription,
+              location: locationRestaurant,
+              images: response,
+              rating: 0,
+              ratingTotal: 0,
+              quantityVoting: 0,
+              createdAt: new Date(),
+              createdBy: firebase.auth().currentUser.uid,
+            })
+            .then(() => {
+              setIsLoading(false);
+              navigation.navigate("restaurants");
+            })
+            .catch(() => {
+              setIsLoading(false);
+              toastRef.current.show(
+                "Error al subir el restaurante, intentelo más tarde"
+              );
+            });
+        })
+        .catch((err) => {
+          console.log(err);
+          setIsLoading(false);
+        });
+
+      // console.log("blobs: ", blobs);
+    }
+  };
+
+  const uploadImageToStorage = async () => {
+    // console.log();
+    const imageBlob = [];
+
+    await Promise.all(
+      map(imagesSelected, async (image) => {
+        const response = await fetch(image);
+        const blob = await response.blob();
+        const ref = firebase.storage().ref("restaurants").child(uuid());
+        await ref.put(blob).then(async (result) => {
+          console.log("Uploaded Image : ", result);
+          await firebase
+            .storage()
+            .ref(`restaurants/${result.metadata.name}`)
+            .getDownloadURL()
+            .then((photoUrl) => {
+              imageBlob.push(photoUrl);
+            });
+        });
+      })
+    );
+
+    return imageBlob;
   };
 
   return (
@@ -44,6 +120,7 @@ export default function AddRestaurantForm(props) {
         setRestaurantAddress={setRestaurantAddress}
         setRestaurantDescription={setRestaurantDescription}
         setIsVisibleMap={setIsVisibleMap}
+        locationRestaurant={locationRestaurant}
       />
 
       <UploadImage
@@ -89,6 +166,7 @@ function FormAdd(props) {
     setRestaurantAddress,
     setRestaurantDescription,
     setIsVisibleMap,
+    locationRestaurant,
   } = props;
 
   return (
@@ -105,7 +183,7 @@ function FormAdd(props) {
         rightIcon={{
           type: "material-community",
           name: "google-maps",
-          color: "#c2c2c2",
+          color: locationRestaurant ? "#00a680" : "#c2c2c2",
           onPress: () => {
             setIsVisibleMap(true);
           },

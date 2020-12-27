@@ -5,12 +5,17 @@ import { firebaseApp } from "./app/utils/firebase";
 // import * as firebase from "firebase";
 import { LogBox } from "react-native";
 import { ThemeProvider } from "@react-navigation/native";
+import { decode, encode } from "base-64";
 
 const theme = {
   colors: {
     primary: "#00a680",
   },
 };
+
+if (!global.btoa) global.btoa = encode;
+if (!global.atob) global.atob = decode;
+
 export default function App() {
   LogBox.ignoreLogs([
     "Setting a timer",
