@@ -4,7 +4,13 @@ import Navigation from "./app/navigations/Navigation";
 import { firebaseApp } from "./app/utils/firebase";
 // import * as firebase from "firebase";
 import { LogBox } from "react-native";
+import { ThemeProvider } from "@react-navigation/native";
 
+const theme = {
+  colors: {
+    primary: "#00a680",
+  },
+};
 export default function App() {
   LogBox.ignoreLogs([
     "Setting a timer",
@@ -15,5 +21,9 @@ export default function App() {
   //     console.log("User: ", user);
   //   });
   // }, []);
-  return <Navigation />;
+  return (
+    <ThemeProvider theme={theme}>
+      <Navigation />
+    </ThemeProvider>
+  );
 }

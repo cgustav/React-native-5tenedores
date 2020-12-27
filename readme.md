@@ -20,4 +20,6 @@ Dentro de las dependencias críticas del proyecto se encuentran:
 - [React Navigation](https://reactnavigation.org/)
 - [Expo Camera](https://docs.expo.io/versions/latest/sdk/camera/)
 - [Expo Image Picker](https://docs.expo.io/versions/latest/sdk/imagepicker/)
+- [Expo Map View](https://docs.expo.io/versions/latest/sdk/map-view/)
+- [Expo Location](https://docs.expo.io/versions/latest/sdk/location/)
 - [Firebase](https://www.npmjs.com/package/firebase)
