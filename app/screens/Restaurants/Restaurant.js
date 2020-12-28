@@ -61,13 +61,11 @@ export default function Restaurant(props) {
   }, [userLogged, restaurant]);
 
   const addFavorite = () => {
-    // console.log("add favorite");
-
-    if (!userLogged) {
+    if (!userLogged)
       toastRef.current.show(
         "Para usar el sistema de favoritos tienes que haber iniciado sesión"
       );
-    } else {
+    else {
       const payload = {
         idUser: firebase.auth().currentUser.uid,
         idRestaurant: restaurant.id,
@@ -85,7 +83,6 @@ export default function Restaurant(props) {
     }
   };
   const removeFavorite = () => {
-    // console.log("remove favorite");
     setIsFavorite(false);
 
     db.collection("favorites")

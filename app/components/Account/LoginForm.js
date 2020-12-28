@@ -14,6 +14,10 @@ export default function LoginForm(props) {
   const [formData, setFormData] = useState(defaultFormValue);
   const navigation = useNavigation();
 
+  // firebase.auth().onAuthStateChanged((user) => {
+  //   user && navigation.navigate("account");
+  // });
+
   //Valores por defecto del formulario
   function defaultFormValue() {
     return {
@@ -40,6 +44,7 @@ export default function LoginForm(props) {
         .then(() => {
           setIsLoading(false);
           navigation.navigate("account");
+          // navigation.goBack();
         })
         .catch(() => {
           setIsLoading(false);
