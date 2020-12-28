@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { StyleSheet, Text, View, ScrollView, Dimensions } from "react-native";
-import { Rating } from "react-native-elements";
+import { Rating, ListItem, Icon } from "react-native-elements";
 
-import { firebaseApp } from "../../utils/firebase";
+import ListReviews from "../../components/Restaurants/ListReviews";
 import ImagesCarousel from "../../components/ImagesCarousel";
 import Loading from "../../components/Loading";
+import Map from "../../components/Map";
+import { useFocusEffect } from "@react-navigation/native";
+import { firebaseApp } from "../../utils/firebase";
 import firebase from "firebase/app";
 import "firebase/firestore";
 
-import Map from "../../components/Map";
+import { map } from "lodash";
 
 const db = firebase.firestore(firebaseApp);
 const screenWidth = Dimensions.get("window").width;
@@ -22,18 +25,19 @@ export default function Restaurant(props) {
 
   navigation.setOptions({ title: name });
 
-  useEffect(() => {
-    db.collection("restaurants")
-      .doc(id)
-      .get()
-      .then((response) => {
-        const data = response.data();
-        data.id = response.id;
-        //this triggering warning
-        setRestaurant(data);
-        setRating(data.rating);
-      });
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      db.collection("restaurants")
+        .doc(id)
+        .get()
+        .then((response) => {
+          const data = response.data();
+          data.id = response.id;
+          setRestaurant(data);
+          setRating(data.rating);
+        });
+    }, [])
+  );
 
   if (!restaurant) return <Loading isVisible={true} text="Cargando..." />;
 
@@ -53,7 +57,13 @@ export default function Restaurant(props) {
         location={restaurant.location}
         name={restaurant.name}
         address={restaurant.address}
-      ></RestaurantInfo>
+      />
+
+      <ListReviews
+        navigation={navigation}
+        idRestaurant={restaurant.id}
+        // setRating={setRating}
+      />
     </ScrollView>
   );
 }
@@ -79,12 +89,50 @@ function TitleRestaurant(props) {
 
 function RestaurantInfo(props) {
   const { location, name, address } = props;
+
+  const listInfo = [
+    {
+      text: address,
+      iconName: "map-marker",
+      iconType: "material-community",
+      action: null,
+    },
+
+    {
+      text: "111 222 333",
+      iconName: "phone",
+      iconType: "material-community",
+      action: null,
+    },
+
+    {
+      text: "contacto@email.com",
+      iconName: "at",
+      iconType: "material-community",
+      action: null,
+    },
+  ];
+
   return (
     <View style={styles.viewRestaurantInfo}>
       <Text style={styles.restaurantInfoTitle}>
         Información sobre el restaurante
       </Text>
       <Map location={location} name={name} height={100} />
+      {map(listInfo, (item, index) => {
+        return (
+          <ListItem
+            key={index}
+            title={item.text}
+            leftIcon={{
+              name: item.iconName,
+              type: item.iconType,
+              color: "#00a680",
+            }}
+            containerStyle={styles.containerListItem}
+          />
+        );
+      })}
     </View>
   );
 }
@@ -117,5 +165,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
+  },
+  containerListItem: {
+    borderBottomColor: "#d8d8d8",
+    borderBottomWidth: 1,
   },
 });
