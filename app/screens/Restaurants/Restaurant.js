@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { StyleSheet, Text, View, ScrollView, Dimensions } from "react-native";
 import { Rating, ListItem, Icon } from "react-native-elements";
 
@@ -7,6 +7,7 @@ import ImagesCarousel from "../../components/ImagesCarousel";
 import Loading from "../../components/Loading";
 import Map from "../../components/Map";
 import { useFocusEffect } from "@react-navigation/native";
+import Toast from "react-native-easy-toast";
 import { firebaseApp } from "../../utils/firebase";
 import firebase from "firebase/app";
 import "firebase/firestore";
@@ -22,8 +23,16 @@ export default function Restaurant(props) {
   const { id, name } = route.params;
   const [restaurant, setRestaurant] = useState(null);
   const [rating, setRating] = useState(0);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [userLogged, setUserLogged] = useState(false);
+
+  const toastRef = useRef();
 
   navigation.setOptions({ title: name });
+
+  firebase.auth().onAuthStateChanged((user) => {
+    setUserLogged(user ? true : false);
+  });
 
   useFocusEffect(
     useCallback(() => {
@@ -39,10 +48,87 @@ export default function Restaurant(props) {
     }, [])
   );
 
+  useEffect(() => {
+    if (userLogged && restaurant) {
+      db.collection("favorites")
+        .where("idRestaurant", "==", restaurant.id)
+        .where("idUser", "==", firebase.auth().currentUser.uid)
+        .get()
+        .then((response) => {
+          if (response.docs.length) setIsFavorite(true);
+        });
+    }
+  }, [userLogged, restaurant]);
+
+  const addFavorite = () => {
+    // console.log("add favorite");
+
+    if (!userLogged) {
+      toastRef.current.show(
+        "Para usar el sistema de favoritos tienes que haber iniciado sesión"
+      );
+    } else {
+      const payload = {
+        idUser: firebase.auth().currentUser.uid,
+        idRestaurant: restaurant.id,
+      };
+
+      db.collection("favorites")
+        .add(payload)
+        .then(() => {
+          setIsFavorite(true);
+          toastRef.current.show("Restaurante añadido a favoritos.");
+        })
+        .catch(() => {
+          toastRef.current.show("Error al añadir restaurante a favoritos.");
+        });
+    }
+  };
+  const removeFavorite = () => {
+    // console.log("remove favorite");
+    setIsFavorite(false);
+
+    db.collection("favorites")
+      .where("idRestaurant", "==", restaurant.id)
+      .where("idUser", "==", firebase.auth().currentUser.uid)
+      .get()
+      .then((response) => {
+        response.forEach((doc) => {
+          const idFavorite = doc.id;
+          db.collection("favorites")
+            .doc(idFavorite)
+            .delete()
+            .then(() => {
+              setIsFavorite(false);
+              toastRef.current.show("Restaurante eliminado de favoritos.");
+            })
+            .catch((err) => {
+              toastRef.current.show(
+                "Error al eliminar el restaurante de favoritos."
+              );
+            });
+        });
+      });
+  };
+
   if (!restaurant) return <Loading isVisible={true} text="Cargando..." />;
 
   return (
     <ScrollView vertical style={styles.viewBody}>
+      <View style={styles.viewFavorite}>
+        <Icon
+          type="material-community"
+          name={isFavorite ? "heart" : "heart-outline"}
+          onPress={() => {
+            // console.log("Add Favorites");
+            isFavorite ? removeFavorite() : addFavorite();
+          }}
+          // color="#00a680"
+          color={isFavorite ? "#f00" : "#000"}
+          size={25}
+          underlayColor="transparent"
+        ></Icon>
+      </View>
       <ImagesCarousel
         arrayImages={restaurant.images}
         height={250}
@@ -64,6 +150,7 @@ export default function Restaurant(props) {
         idRestaurant={restaurant.id}
         // setRating={setRating}
       />
+      <Toast ref={toastRef} position="center" opacity={0.9}></Toast>
     </ScrollView>
   );
 }
@@ -169,5 +256,15 @@ const styles = StyleSheet.create({
   containerListItem: {
     borderBottomColor: "#d8d8d8",
     borderBottomWidth: 1,
+  },
+  viewFavorite: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    zIndex: 2,
+    backgroundColor: "#fff",
+    borderBottomLeftRadius: 100,
+    padding: 5,
+    paddingLeft: 15,
   },
 });
